@@ -1,6 +1,7 @@
-const axios = require('axios');
+// const axios = require('axios');
+import axios from 'axios';
 
-async function fetchProductData(barcode) {
+export async function fetchProductData(barcode) {
   try {
     const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
     const product = response.data.product;
@@ -22,4 +23,4 @@ async function fetchProductData(barcode) {
   }
 }
 
-module.exports = { fetchProductData };
+// module.exports = { fetchProductData };

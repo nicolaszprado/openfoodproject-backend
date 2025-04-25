@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { fetchProductData } from '../services/openFoodService.js'; // Certifique-se que o caminho e extensão estejam corretos
+
 const router = express.Router();
-const { fetchProductData } = require('../services/openFoodService');
 
 router.get('/:barcode', async (req, res) => {
   try {
@@ -13,8 +14,9 @@ router.get('/:barcode', async (req, res) => {
 
     res.json(productData);
   } catch (error) {
+    console.error('Erro ao buscar produto:', error);
     res.status(500).json({ error: 'Erro ao buscar produto' });
   }
 });
 
-module.exports = router;
+export default router;
