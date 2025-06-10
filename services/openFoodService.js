@@ -1,12 +1,23 @@
 // services/openFoodService.js
 import axios from 'axios';
+import Product from '../models/Product.js'
 
 export async function fetchProductData(barcode) {
   try {
     console.log(`[OpenFoodService] Tentando buscar produto: ${barcode}`);
+
+    const dbProduct = await Product.findOne({ean: barcode})
+
+    if (dbProduct) {
+      console.log(`[OpenFoodService] produto ${barcode} / ${dbProduct.name} encontrado no banco!`)
+      return dbProduct;
+    } else {
+      console.log(`[OpenFoodService] produto ${barcode} NÃO encontrado no banco, fazendo request pra API.`)
+    }
+
     const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
 
-    console.log(`[OpenFoodService] Resposta da API Open Food Facts (status: ${response.status}):`, response.data);
+    //console.log(`[OpenFoodService] Resposta da API Open Food Facts (status: ${response.status}):`, response.data);
 
     const productOff = response.data.product;
     const status = response.data.status;
@@ -23,22 +34,15 @@ export async function fetchProductData(barcode) {
 
     // --- Mapeando dados do Open Food Facts para sua interface Product ---
     const mappedProduct = {
-      // Campos obrigatórios da sua interface
-      id: barcode, // Usando o barcode como ID
       name: productOff.product_name || 'Produto Desconhecido', // Fallback para nome
       ean: barcode, // O EAN é o próprio barcode
       description: productOff.generic_name || productOff.ingredients_text || 'Sem descrição disponível.',
-      price: 0.00, // OFF não fornece preço, use 0.00 ou null
       imageUrl: productOff.image_url || 'https://via.placeholder.com/150', // Imagem ou placeholder
       restaurantName: productOff.brands || 'Marca Desconhecida',
-      category: productOff.categories || 'Desconhecida', // OFF categories can be complex, you might parse this
-      rating: 0, // OFF não fornece rating
-      reviewCount: 0, // OFF não fornece reviewCount
+      category: productOff.categories || 'Desconhecida',
       
-      // Converte a string de ingredientes para um array (se existir)
-      ingredients: productOff.ingredients_text ? 
-                   productOff.ingredients_text.split(',').map(item => item.trim()) : 
-                   [],
+      // Retorna as informações relevantes sobres ingredientes.
+      ingredients: productOff.ingredients ? ingredientsBuilder(productOff.ingredients) : [],
       
       // Alérgenos são um pouco mais complexos no OFF, muitas vezes em `allergens_from_ingredients`
       // ou apenas em `ingredients_text`. Aqui, um placeholder.
@@ -57,9 +61,6 @@ export async function fetchProductData(barcode) {
         // Add other nutritional fields if available in OFF and in your interface
       },
       
-      // Reviews não são fornecidas pelo OFF, então um array vazio
-      reviews: [],
-      
       // Badges de dieta - OFF fornece tags, mas não booleans diretos.
       // Você precisaria de lógica para mapear tags para esses booleans.
       isVegetarian: productOff.labels_tags?.includes('en:vegetarian') || false,
@@ -69,6 +70,15 @@ export async function fetchProductData(barcode) {
     };
 
     console.log(`[OpenFoodService] Produto ${mappedProduct.name} encontrado e mapeado.`);
+
+    try {
+      const saveProduct = new Product(mappedProduct)
+      await saveProduct.save();
+      console.log(`[OpenFoodService] Produto ${mappedProduct.name} salvo com sucesso no banco.`)
+    } catch (error) {
+      console.log(`[OpenFoodService] Erro ao salvar produto ${mappedProduct.name} no banco: ${error}.`)
+
+    }
     return mappedProduct; // Retorna o objeto mapeado
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -83,4 +93,11 @@ export async function fetchProductData(barcode) {
     }
     return null;
   }
+}
+
+function ingredientsBuilder(ingredients) {
+    return ingredients.map(ingredient => ({
+        ingredient: ingredient.text,
+        percent: ingredient.percent_estimate
+    }));
 }
