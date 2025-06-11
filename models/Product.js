@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const IngredientSchema = new mongoose.Schema({
   ingredient: { type: String, required: true },
   percent: { type: Number, required: true }
-});
+}, {_id: false});
 
 const NutritionalInfoSchema = new mongoose.Schema({
   calories: { type: Number },
@@ -12,7 +12,7 @@ const NutritionalInfoSchema = new mongoose.Schema({
   fat: { type: Number },
   fiber: { type: Number },
   sodium: { type: Number }
-});
+}, {_id: false});
 
 const ProductSchema = new mongoose.Schema({
   name: { type: String, required: true },

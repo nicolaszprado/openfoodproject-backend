@@ -75,11 +75,10 @@ export async function fetchProductData(barcode) {
       const saveProduct = new Product(mappedProduct)
       await saveProduct.save();
       console.log(`[OpenFoodService] Produto ${mappedProduct.name} salvo com sucesso no banco.`)
+      return saveProduct; // Retorna o objeto mapeado
     } catch (error) {
       console.log(`[OpenFoodService] Erro ao salvar produto ${mappedProduct.name} no banco: ${error}.`)
-
     }
-    return mappedProduct; // Retorna o objeto mapeado
   } catch (err) {
     if (axios.isAxiosError(err)) {
         console.error(`[OpenFoodService] Erro Axios ao buscar produto:`, err.message);

@@ -4,6 +4,7 @@ import cors from 'cors';
 import db from './config/dbConnect.js';
 import productRoutes from './routes/product.js';
 import authRoutes from './routes/auth.js';
+import favoriteRoutes from './routes/favorites.js'
 import protect from './services/authService.js';
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.get('/api/private', protect, (req, res) => {
 
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 db.once('open', () => {
   app.listen(PORT, () => {
