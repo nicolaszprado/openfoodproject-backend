@@ -25,6 +25,7 @@ Alem disso gere uma receita de algo simples se possivel, utilizando o produto").
     const completion = await openai.chat.completions.create({
       model: 'gpt-4.1-nano', //NÃO TROCAR O MODELO!!!
       messages: [
+        
         { role: 'system', content: 'Voce e um nutricionista.' },
         { role: 'user', content: prompt.trim() },
       ],
